@@ -2399,6 +2399,19 @@ handleRoute();   // 최초 진입 경로 처리 (딥링크·새로고침 대응)
     var slide = cta.closest('.banner-slide');
     if (slide) send('promotion_click', bannerParams(slide));
   }, true);
+  // 10) search — 상단 검색창에서 검색 실행 시 (GA4 권장 이벤트)
+  var origSearch = window.doSearch;
+  window.doSearch = function (ev) {
+    var q = (document.getElementById('search-input').value || '').trim();
+    if (q) {
+      send('search', {
+        search_term: q,
+        search_result_count: searchProducts(q).length,
+        login_status: currentUser ? 'logged_in' : 'logged_out'
+      });
+    }
+    return origSearch.apply(this, arguments);
+  };
   var origBuy = window.buyNow;
   window.buyNow = function (productId) {
     var params = detailParams(productId);
