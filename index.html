@@ -2356,6 +2356,23 @@ handleRoute();   // 최초 진입 경로 처리 (딥링크·새로고침 대응)
       login_status: currentUser ? 'logged_in' : 'logged_out'
     });
   }, true);
+  // 7) add_to_wishlist — 상품 상세 하트 버튼으로 찜에 '추가'될 때만 (해제는 제외)
+  var origToggle = window.toggleWishlist;
+  window.toggleWishlist = function (productId, ev) {
+    var fromDetail = ev && ev.target && ev.target.closest && ev.target.closest('#btn-wishlist-detail');
+    var wasWished = isWished(productId);
+    origToggle.apply(this, arguments);
+    if (!fromDetail || wasWished || !isWished(productId)) return;
+    var params = detailParams(productId);
+    if (!params) return;
+    send('add_to_wishlist', {
+      item_name: params.item_name,
+      item_option: params.item_option,
+      value: getVariant(PRODUCTS.find(function (p) { return p.id === productId; }), selectedVariantId).price,
+      wishlist_count: wishlist.length,
+      login_status: currentUser ? 'logged_in' : 'logged_out'
+    });
+  };
   var origBuy = window.buyNow;
   window.buyNow = function (productId) {
     var params = detailParams(productId);
