@@ -2373,6 +2373,32 @@ handleRoute();   // 최초 진입 경로 처리 (딥링크·새로고침 대응)
       login_status: currentUser ? 'logged_in' : 'logged_out'
     });
   };
+  // 8) promotion_view / 9) promotion_click — 상단 히어로 배너 (슬라이드 5장)
+  function bannerParams(slide) {
+    return {
+      promotion_name: slide.dataset.bannerTitle,
+      promotion_id: 'top_banner_' + slide.dataset.bannerId,
+      banner_position: Number(slide.dataset.bannerId),
+      banner_location: 'top'
+    };
+  }
+  var bannerSeen = new WeakSet();
+  if ('IntersectionObserver' in window) {
+    var bannerIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting || bannerSeen.has(en.target)) return;
+        bannerSeen.add(en.target);          // 슬라이드별 페이지 로드당 1회
+        send('promotion_view', bannerParams(en.target));
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('#hero .banner-slide').forEach(function (s) { bannerIO.observe(s); });
+  }
+  document.addEventListener('click', function (e) {
+    var cta = e.target.closest('#hero .banner-cta');
+    if (!cta) return;
+    var slide = cta.closest('.banner-slide');
+    if (slide) send('promotion_click', bannerParams(slide));
+  }, true);
   var origBuy = window.buyNow;
   window.buyNow = function (productId) {
     var params = detailParams(productId);
